@@ -9,6 +9,15 @@ require('dotenv').config();
 const app = express();
 app.use(express.json());
 
+// --- MIDDLEWARE DE SEGURIDAD PARA SHOPIFY ---
+app.use((req, res, next) => {
+    const shop = req.query.shop || req.body.shop;
+    if (shop) {
+        res.setHeader("Content-Security-Policy", `frame-ancestors https://${shop} https://admin.shopify.com;`);
+    }
+    next();
+});
+
 const {
     SHOPIFY_API_KEY,
     SHOPIFY_API_SECRET,
@@ -29,8 +38,14 @@ app.get('/auth', (req, res) => {
         const redirectUri = `${HOST}/auth/callback`;
         const installUrl = `https://${shop}/admin/oauth/authorize?client_id=${SHOPIFY_API_KEY}&scope=${SCOPES}&state=${state}&redirect_uri=${redirectUri}`;
 
-        res.cookie('state', state);
-        res.redirect(installUrl);
+        res.cookie('state', state, { httpOnly: true, secure: true, sameSite: 'none' });
+
+        // ESCAPAR DEL IFRAME: Shopify bloquea redirecciones directas dentro de un iframe
+        res.send(`
+            <script type="text/javascript">
+                window.top.location.href = "${installUrl}";
+            </script>
+        `);
     } else {
         return res.status(400).send('Falta el parámetro ?shop=tu-tienda.myshopify.com');
     }
