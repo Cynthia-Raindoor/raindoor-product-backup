@@ -42,9 +42,29 @@ app.get('/auth', (req, res) => {
 
         // ESCAPAR DEL IFRAME: Shopify bloquea redirecciones directas dentro de un iframe
         res.send(`
-            <script type="text/javascript">
-                window.top.location.href = "${installUrl}";
-            </script>
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Redirigiendo a Shopify...</title>
+                <script type="text/javascript">
+                    window.top.location.href = "${installUrl}";
+                </script>
+            </head>
+            <body style="font-family: sans-serif; text-align: center; padding: 50px;">
+                <h2>Conectando con Shopify...</h2>
+                <p>Si la página no carga automáticamente, haz clic en el botón:</p>
+                <a href="${installUrl}" target="_top" style="
+                    display: inline-block; 
+                    padding: 15px 30px; 
+                    background-color: #008060; 
+                    color: white; 
+                    text-decoration: none; 
+                    border-radius: 5px;
+                    font-weight: bold;
+                    margin-top: 20px;
+                ">Autorizar App de Backup</a>
+            </body>
+            </html>
         `);
     } else {
         return res.status(400).send('Falta el parámetro ?shop=tu-tienda.myshopify.com');
